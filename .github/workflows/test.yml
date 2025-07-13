@@ -1,0 +1,55 @@
+name: API Automation Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  run-api-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, uat]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: 11
+          distribution: temurin
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Run Tests for ${{ matrix.env }} environment
+        run: mvn clean test -P${{ matrix.env }}
+
+      - name: Generate Allure Report
+        run: mvn allure:report
+
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ matrix.env }}
+          path: target/site/allure-maven-plugin
+
+      - name: Upload TestNG HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: testng-html-report-${{ matrix.env }}
+          path: test-output/
+
+      - name: Upload Maven Surefire HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-html-report-${{ matrix.env }}
+          path: target/surefire-reports/
