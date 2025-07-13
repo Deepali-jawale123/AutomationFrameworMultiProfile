@@ -15,6 +15,7 @@ public class TestCases {
     public void setup() {
         Config.load();
         RestAssured.baseURI = Config.get("base.uri");
+        System.out.println("Base URI: " + RestAssured.baseURI);
     }
 
     @Test
